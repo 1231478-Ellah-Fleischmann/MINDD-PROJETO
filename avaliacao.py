@@ -1,4 +1,4 @@
-"""Avaliação dos modelos — Task 2, Parte 1.
+"""Avaliação dos modelos — Task 2
 
 Funções partilhadas pela Parte 1 (métricas) e pela Parte 2 (folds e baselines).
 Convenção: `score` = quanto maior, maior o risco de sessão anómala (classe 1).
