@@ -61,3 +61,28 @@ def avaliar_por_mes(datas, y, score, limiar):
                       "y": np.asarray(y), "score": np.asarray(score, dtype=float)})
     linhas = {mes: avaliar(g["y"], g["score"], limiar) for mes, g in d.groupby("mes")}
     return pd.DataFrame(linhas).T
+
+
+# ── Validação temporal (Parte 2) ─────────────────────────────────────────────
+# Expanding window: o treino começa sempre no início dos dados e cresce;
+# a validação são os 3 meses seguintes. O teste (out–dez/2021) nunca entra aqui.
+FOLDS = [
+    # nome, início da validação, fim da validação (exclusivo)
+    ("F1", "2020-10-01", "2021-01-01"),
+    ("F2", "2021-01-01", "2021-04-01"),
+    ("F3", "2021-04-01", "2021-07-01"),
+    ("F4", "2021-07-01", "2021-10-01"),
+]
+
+
+def folds_temporais(datas, folds=FOLDS):
+    """Gera (nome, idx_treino, idx_validacao) com índices POSICIONAIS.
+
+    Treino = todas as sessões com início antes do início da validação.
+    """
+    datas = pd.to_datetime(pd.Series(datas)).reset_index(drop=True)
+    for nome, ini_val, fim_val in folds:
+        ini, fim = pd.Timestamp(ini_val), pd.Timestamp(fim_val)
+        idx_tr = np.flatnonzero(datas < ini)
+        idx_va = np.flatnonzero((datas >= ini) & (datas < fim))
+        yield nome, idx_tr, idx_va
