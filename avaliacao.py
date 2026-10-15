@@ -63,7 +63,9 @@ def avaliar(y, score, limiar=None, pred=None):
         "prevalencia": prev,
         # ranking
         "pr_auc": pr_auc,
-        "pr_auc_lift": pr_auc / prev if prev > 0 else np.nan,
+        # PR-AUC normalizada: 0 = aleatório, 1 = perfeito, qualquer que seja a prevalência
+        # (o rácio PR-AUC ÷ prevalência não serve: o seu máximo é 1 ÷ prevalência)
+        "pr_auc_norm": (pr_auc - prev) / (1 - prev) if 0 < prev < 1 else np.nan,
         "roc_auc": roc_auc,
         # decisão
         "recall": recall_score(y, pred, zero_division=0),
@@ -142,7 +144,7 @@ def avaliar_folds(df, fazer_score, alertas_por_1000=200, limiar=None,
     return (res, scores) if devolver_scores else res
 
 
-def resumir_folds(res, metricas=("pr_auc", "pr_auc_lift", "roc_auc", "recall", "precisao")):
+def resumir_folds(res, metricas=("recall", "pr_auc", "pr_auc_norm", "roc_auc", "precisao")):
     """Média, desvio-padrão e pior fold de cada métrica (todas: quanto maior, melhor)."""
     r = res[list(metricas)].astype(float)
     return pd.concat({"média": r.mean(), "desvio": r.std(ddof=1), "pior fold": r.min()}, axis=1).stack()
@@ -150,7 +152,7 @@ def resumir_folds(res, metricas=("pr_auc", "pr_auc_lift", "roc_auc", "recall", "
 
 
 # ── Agregação dos folds (2.4) ────────────────────────────────────────────────
-METRICAS_RESUMO = ("pr_auc", "pr_auc_lift", "roc_auc", "recall", "precisao")
+METRICAS_RESUMO = ("recall", "pr_auc", "pr_auc_norm", "roc_auc", "precisao")
 
 
 def agregar_folds(res, scores=None, metricas=METRICAS_RESUMO):
@@ -161,6 +163,7 @@ def agregar_folds(res, scores=None, metricas=METRICAS_RESUMO):
     - média ponderada pelo nº de sessões de validação
     - pooled: as 4 validações juntas como um só conjunto (se `scores` for dado)
     - tendência: declive da métrica por fold (F1 -> F4), por mínimos quadrados
+      (ler na PR-AUC normalizada e na ROC-AUC; a PR-AUC simples acompanha a prevalência)
     """
     r = res[list(metricas)].astype(float)
     w = res["n"].astype(float)
@@ -181,7 +184,7 @@ def agregar_folds(res, scores=None, metricas=METRICAS_RESUMO):
     return out
 
 
-def comparar(res_a, res_b, metrica="pr_auc"):
+def comparar(res_a, res_b, metrica="recall"):
     """Compara dois métodos fold a fold (diferenças emparelhadas A − B)."""
     a, b = res_a[metrica].astype(float), res_b[metrica].astype(float)
     d = a - b
@@ -212,5 +215,57 @@ def transferir_limiar(scores, alertas_por_1000=200):
             "recall (limiar transferido)": r["recall"],
             "precisão (limiar transferido)": r["precisao"],
             "recall (orçamento exato)": avaliar(y, s, pred=pred_orc)["recall"],
+        }
+    return pd.DataFrame(linhas).T
+
+
+def alertas_limiar_movel(datas, score, inicio, fim, alertas_por_1000=200, janela_dias=28):
+    """Limiar recalculado no início de cada semana, só com scores do passado.
+
+    Para as sessões com início em [inicio, fim): em cada segunda-feira, o limiar passa a ser o
+    quantil (1 − X/1000) dos scores das sessões dos `janela_dias` dias anteriores.
+    `score` tem de estar alinhado com `datas` e cobrir também o período antes de `inicio`.
+    Devolve (índices das sessões do período, alertas 0/1, tabela dos limiares por semana).
+    """
+    datas = pd.to_datetime(pd.Series(datas)).reset_index(drop=True)
+    score = np.asarray(score, dtype=float)
+    inicio, fim = pd.Timestamp(inicio), pd.Timestamp(fim)
+    sel = np.flatnonzero((datas >= inicio) & (datas < fim))
+    d_sel, s_sel = datas.iloc[sel].to_numpy(), score[sel]
+    segundas = [c for c in pd.date_range(inicio, fim, freq="W-MON") if inicio < c < fim]
+    cortes = [inicio] + segundas + [fim]
+    pred = np.zeros(len(sel), dtype=int)
+    limiares = []
+    for a, b in zip(cortes[:-1], cortes[1:]):
+        passado = ((datas >= a - pd.Timedelta(days=janela_dias)) & (datas < a)).to_numpy()
+        lim = limiar_por_orcamento(score[passado], alertas_por_1000)
+        m = (d_sel >= np.datetime64(a)) & (d_sel < np.datetime64(b))
+        pred[m] = (s_sel[m] >= lim).astype(int)
+        limiares.append({"semana": a.date(), "limiar": lim, "sessões": int(m.sum()),
+                         "alertas por 1000": 1000 * pred[m].mean() if m.any() else np.nan})
+    return sel, pred, pd.DataFrame(limiares)
+
+
+def avaliar_limiar_movel(df, score, alertas_por_1000=200, janela_dias=28,
+                         col_y="is_Abnormal", col_t="Start Time"):
+    """Avalia, em cada fold, a decisão com limiar móvel (só passado) vs orçamento exato."""
+    df = df.reset_index(drop=True)
+    score = np.asarray(score, dtype=float)
+    y_all = df[col_y].to_numpy()
+    linhas = {}
+    for nome, ini, fim in FOLDS:
+        sel, pred, lims = alertas_limiar_movel(df[col_t], score, ini, fim, alertas_por_1000, janela_dias)
+        y, s = y_all[sel], score[sel]
+        r = avaliar(y, s, pred=pred)
+        semanal = lims["alertas por 1000"]
+        linhas[nome] = {
+            "alertas por 1000 (limiar móvel)": r["total_alertas_1000"],
+            "alertas por 1000 — semana mín.": semanal.min(),
+            "alertas por 1000 — semana máx.": semanal.max(),
+            "recall (limiar móvel)": r["recall"],
+            "precisão (limiar móvel)": r["precisao"],
+            "recall (orçamento exato)": avaliar(y, s, pred=alertas_por_orcamento(s, alertas_por_1000))["recall"],
+            "alertas por 1000 (quantil do próprio período)": avaliar(
+                y, s, limiar=limiar_por_orcamento(s, alertas_por_1000))["total_alertas_1000"],
         }
     return pd.DataFrame(linhas).T
