@@ -17,6 +17,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
 
 
 # ── Dados ────────────────────────────────────────────────────────────────────
@@ -147,6 +148,7 @@ HIPERPARAMETROS = {
     "logistica": {"C": 0.1, "max_iter": 300},
     "arvore": {"max_depth": 8, "min_samples_leaf": 200},
     "naive_bayes": {"var_smoothing": 1e-9},
+    "random_forest": {"n_estimators": 200, "min_samples_leaf": 100, "max_features": "sqrt", "n_jobs": -1},
 }
 
 
@@ -158,6 +160,8 @@ def criar_modelo(nome, **hp):
         return DecisionTreeClassifier(random_state=0, **p)
     if nome == "naive_bayes":
         return GaussianNB(**p)
+    if nome == "random_forest":
+        return RandomForestClassifier(random_state=0, **p)
     raise ValueError(nome)
 
 
