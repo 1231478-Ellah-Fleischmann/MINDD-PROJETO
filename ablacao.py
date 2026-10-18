@@ -16,6 +16,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import GaussianNB
 
 
 # ── Dados ────────────────────────────────────────────────────────────────────
@@ -145,6 +146,7 @@ def criar_preprocessador(cols, espaco="posto", escalar=True, hora_onehot=True):
 HIPERPARAMETROS = {
     "logistica": {"C": 0.1, "max_iter": 300},
     "arvore": {"max_depth": 8, "min_samples_leaf": 200},
+    "naive_bayes": {"var_smoothing": 1e-9},
 }
 
 
@@ -154,16 +156,22 @@ def criar_modelo(nome, **hp):
         return LogisticRegression(random_state=0, **p)
     if nome == "arvore":
         return DecisionTreeClassifier(random_state=0, **p)
+    if nome == "naive_bayes":
+        return GaussianNB(**p)
     raise ValueError(nome)
 
 
 def criar_pipeline(nome, grupos, espaco="posto", **hp):
-    """Pipeline completo: logística → hora em one-hot e escalonamento; árvore → hora numérica, sem escalonamento."""
+    """Pipeline completo.
+    logística   → hora em one-hot, com escalonamento;
+    árvore      → hora numérica, sem escalonamento;
+    naive_bayes → hora numérica, com escalonamento (o var_smoothing depende da escala).
+    """
     cols = colunas_do_modelo(grupos, espaco)
-    linear = nome == "logistica"
-    pre = criar_preprocessador(cols, espaco, escalar=linear, hora_onehot=linear)
+    escalar = nome in ("logistica", "naive_bayes")
+    hora_onehot = nome == "logistica"
+    pre = criar_preprocessador(cols, espaco, escalar=escalar, hora_onehot=hora_onehot)
     return cols, Pipeline([("pre", pre), ("modelo", criar_modelo(nome, **hp))])
-
 
 def fabricar_scorer(nome, grupos, espaco="posto", treino_a_partir_de=None, **hp):
     """Devolve `fazer_score(treino, validacao)` para o `avaliar_folds` da Task 2.
