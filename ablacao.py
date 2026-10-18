@@ -17,7 +17,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 
 
 # ── Dados ────────────────────────────────────────────────────────────────────
@@ -149,6 +149,7 @@ HIPERPARAMETROS = {
     "arvore": {"max_depth": 8, "min_samples_leaf": 200},
     "naive_bayes": {"var_smoothing": 1e-9},
     "random_forest": {"n_estimators": 200, "min_samples_leaf": 100, "max_features": "sqrt", "n_jobs": -1},
+    "boosting": {"learning_rate": 0.1, "max_iter": 200, "max_leaf_nodes": 31, "min_samples_leaf": 100, "early_stopping": False},
 }
 
 
@@ -162,6 +163,8 @@ def criar_modelo(nome, **hp):
         return GaussianNB(**p)
     if nome == "random_forest":
         return RandomForestClassifier(random_state=0, **p)
+    if nome == "boosting":
+        return HistGradientBoostingClassifier(random_state=0, **p)
     raise ValueError(nome)
 
 
