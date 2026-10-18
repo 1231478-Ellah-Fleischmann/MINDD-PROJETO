@@ -6,8 +6,6 @@ grupos de variáveis (a ablação). Tudo o que aprende com os dados (medianas, l
 média/desvio, categorias) é ajustado só no treino de cada fold, porque o pipeline é
 reajustado dentro de `fazer_score`, chamada pelo `avaliar_folds`.
 
-Se existir o `preparacao.py` da colega, convém confirmar que os dois dão os mesmos
-valores (ver a célula de verificação do notebook).
 """
 import numpy as np
 import pandas as pd
@@ -138,6 +136,8 @@ def criar_preprocessador(cols, espaco="posto", escalar=True, hora_onehot=True):
     if tempo_cat:
         cats = [list(range(24)) if c == "hour" else list(range(7)) for c in tempo_cat]
         blocos.append(("tempo", OneHotEncoder(categories=cats, handle_unknown="ignore", sparse_output=False), tempo_cat))
+    usadas = [c for _, _, cs in blocos for c in cs]
+    assert sorted(usadas) == sorted(cols), f"colunas perdidas ou repetidas: {set(cols) ^ set(usadas)}"
     return ColumnTransformer(blocos, remainder="drop", verbose_feature_names_out=False)
 
 
