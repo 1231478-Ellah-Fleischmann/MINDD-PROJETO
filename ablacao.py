@@ -28,7 +28,7 @@ NIVEIS_ESPACIAIS = {"posto": "Charging Post ID",
                     "localizacao": "Location Information",
                     "distrito": "District Name"}
 
-# ── Grupos de variáveis (os mesmos da Parte 1, secção 8.2) ──────────────────
+# ── # ── Grupos de variáveis (Task 2: secção 1.2 do notebook / 8.2 do relatório) ──────────────────
 GRUPOS = {
     "tempo": ["hour", "dow"],
     "meteorologia": ["Temperature(℃)", "Relative Humidity(%)", "Precipitation(mm)"],

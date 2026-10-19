@@ -219,7 +219,7 @@ def transferir_limiar(scores, alertas_por_1000=200):
     return pd.DataFrame(linhas).T
 
 
-def alertas_limiar_movel(datas, score, inicio, fim, alertas_por_1000=200, janela_dias=28):
+def alertas_limiar_movel(datas, score, inicio, fim, alertas_por_1000=200, janela_dias=7):
     """Limiar recalculado no início de cada semana, só com scores do passado.
 
     Para as sessões com início em [inicio, fim): em cada segunda-feira, o limiar passa a ser o
@@ -246,7 +246,7 @@ def alertas_limiar_movel(datas, score, inicio, fim, alertas_por_1000=200, janela
     return sel, pred, pd.DataFrame(limiares)
 
 
-def avaliar_limiar_movel(df, score, alertas_por_1000=200, janela_dias=28,
+def avaliar_limiar_movel(df, score, alertas_por_1000=200, janela_dias=7,
                          col_y="is_Abnormal", col_t="Start Time"):
     """Avalia, em cada fold, a decisão com limiar móvel (só passado) vs orçamento exato."""
     df = df.reset_index(drop=True)
