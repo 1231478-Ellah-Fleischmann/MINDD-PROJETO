@@ -1,7 +1,7 @@
 """Task 3 — Ablação + Regressão logística e árvore de decisão.
 
 Módulo AUTÓNOMO: constrói o seu próprio pré-processamento a partir das regras da
-Task 1 (secção 6) e da Task 2 (secção 8.6), para permitir treinar com SUBCONJUNTOS de
+Task 1 (secções 6.2, 6.3 e 9) e da Task 2 (secção 8.6), para permitir treinar com SUBCONJUNTOS de
 grupos de variáveis (a ablação). Tudo o que aprende com os dados (medianas, limite,
 média/desvio, categorias) é ajustado só no treino de cada fold, porque o pipeline é
 reajustado dentro de `fazer_score`, chamada pelo `avaliar_folds`.
@@ -47,7 +47,7 @@ GRUPOS = {
         "user_active_sessions_at_start", "user_last_completed_abnormal"],
 }
 
-# Regras de preparação (Task 1, secção 6)
+# Regras de preparação (Task 1, secção 6.2, 6.3 e 9.1-9.4)
 IMPUTAR_MEDIANA = ["post_hours_since_previous_completed_session", "post_hours_since_previous_completed_abnormal",
                    "user_days_since_previous_completed_session", "user_days_since_previous_completed_abnormal"]
 LIMITE_P99 = ["user_active_sessions_at_start"]

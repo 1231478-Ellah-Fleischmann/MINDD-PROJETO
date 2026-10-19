@@ -46,7 +46,7 @@ GRUPOS = {"meteorologia": METEO, "tarifa": TARIFA, "tempo": TEMPO,
           "histórico do posto": HIST_POSTO, "histórico do utilizador": HIST_USER,
           "localização": LOCAL}
 
-# ── Decisões fixas da Task 1 (secções 6.3 a 6.7) ─────────────────────────────
+# ── Decisões fixas da Task 1 (secções 6.2, 6.3, 8.1 e 9.1-9.4) ─────────────────────────────
 # Com valores em falta estruturais (imputados pela mediana; todas levam também log1p)
 IMPUTAR_LOG = ["post_hours_since_previous_completed_session", "post_hours_since_previous_completed_abnormal",
                "user_days_since_previous_completed_session", "user_days_since_previous_completed_abnormal"]
