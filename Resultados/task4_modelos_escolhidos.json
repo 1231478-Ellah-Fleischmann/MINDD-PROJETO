@@ -1,0 +1,42 @@
+{
+  "modelo_probabilistico_mais_forte": "random_forest",
+  "hiperparametros_escolhidos": {
+    "logistica": {
+      "C": 0.1,
+      "class_weight": null
+    },
+    "boosting": {
+      "learning_rate": 0.05,
+      "max_iter": 200
+    },
+    "random_forest": {
+      "max_features": 0.5,
+      "min_samples_leaf": 50
+    }
+  },
+  "grupos_de_variaveis": "combinação 4 (tempo, meteorologia, tarifa, histórico do posto e do utilizador), sem informação espacial",
+  "colunas_das_previsoes": {
+    "fold": "F1–F4",
+    "linha_df": "posição da sessão no df de ablacao.carregar_dev",
+    "Start Time": "início da sessão",
+    "y": "is_Abnormal",
+    "score": "probabilidade prevista"
+  },
+  "nota": "Cada fold é previsto por um modelo ajustado só com o treino desse fold (janela crescente). O teste não foi usado.",
+  "hiperparametros_iniciais": {
+    "logistica": {
+      "C": 0.1,
+      "class_weight": null
+    },
+    "boosting": {
+      "learning_rate": 0.05,
+      "max_iter": 200
+    },
+    "random_forest": {
+      "min_samples_leaf": 50,
+      "max_features": 0.5
+    }
+  },
+  "alertas_por_1000": 200,
+  "amostra": 1
+}
