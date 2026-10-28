@@ -1,4 +1,4 @@
-"""Task 4 — Parte A: otimização de hiperparâmetros com folds temporais.
+"""Task 4 — Otimização de hiperparâmetros com folds temporais.
 
 Funções partilhadas pelo notebook `task4_otimizacao.ipynb`. Tudo o que aprende com os dados
 (medianas, limite, escalas, categorias, o próprio modelo) é reajustado em cada fold só com o treino
@@ -195,7 +195,7 @@ def metricas_probabilisticas(scores, bins=10):
     return {"Brier": np.mean(brier), "log-loss": np.mean(ll), "ECE": np.mean(ece)}
 
 
-# ── Ficheiros para a Parte B ─────────────────────────────────────────────────
+# ── Ficheiros guardados ─────────────────────────────────────────────────
 def previsoes_oof(df, scores):
     """Previsões de validação dos 4 folds (cada fold previsto por um modelo treinado só com dados anteriores)."""
     partes = []
@@ -209,7 +209,7 @@ def previsoes_oof(df, scores):
     return pd.concat(partes, ignore_index=True)
 
 
-def guardar_para_B(pasta, df, escolhidos, scores_por_modelo, modelo_probabilistico, extra=None,
+def guardar_resultados(pasta, df, escolhidos, scores_por_modelo, modelo_probabilistico, extra=None,
                    aquecimento_por_modelo=None):
     """Grava os hiperparâmetros escolhidos (JSON), as previsões de validação de cada modelo e, se
     dados, os scores de aquecimento (7 dias antes de cada validação, previstos pelo modelo do fold)."""
