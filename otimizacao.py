@@ -5,10 +5,12 @@ Funções partilhadas pelo notebook `task4_otimizacao.ipynb`. Tudo o que aprende
 desse fold, porque o ajuste passa pelo `avaliar_folds` da Task 2 e pelo `fabricar_scorer` da Task 3.
 O teste (out–dez/2021) nunca é carregado (ver `ablacao.carregar_dev`).
 
-Regra de escolha (secção 8.9 do relatório): ordenar pelo recall médio com 200 alertas por 1000
-sessões; diferenças inferiores a 0,005 são empate, desempatado pela PR-AUC normalizada. Se a
-configuração inicial está no empate e o desempate não a supera em mais de 0,005 de PR-AUC, mantém-se
-a inicial (parcimónia: não trocar por uma diferença que é ruído).
+Regras (secção 8.9 do relatório, fixadas antes da otimização):
+- Escolha de hiperparâmetros (`escolher`): ordenar pelo recall médio com 200 alertas por 1000
+  sessões; diferenças inferiores a 0,005 são empate, desempatado pela PR-AUC normalizada.
+- Comparação final (`veredicto`, `decidir`): A é preferido a B se tiver maior recall médio, for
+  melhor em pelo menos 3 de 4 folds e tiver pior fold não inferior; senão é empate, resolvido pelo
+  menor desvio-padrão entre folds, pela maior PR-AUC normalizada média e pela simplicidade.
 """
 import json
 import time
@@ -19,9 +21,10 @@ import pandas as pd
 from sklearn.model_selection import ParameterGrid, ParameterSampler
 
 import ablacao as ab
-from avaliacao import avaliar_folds, comparar, folds_temporais
+from avaliacao import FOLDS, avaliar_folds, comparar, folds_temporais
 
 TOLERANCIA = 0.005      # diferença de recall abaixo da qual dois candidatos empatam (secção 8.9)
+FOLDS_NOMES = [f[0] for f in FOLDS]   # ["F1", "F2", "F3", "F4"]
 
 
 # ── Candidatos ───────────────────────────────────────────────────────────────
@@ -103,13 +106,7 @@ def escolher(tabela, tol=TOLERANCIA, folds=None):
     t["_recall"] = t[[f"recall_{f}" for f in fs]].mean(axis=1)
     t["_prauc"] = t[[f"prauc_{f}" for f in fs]].mean(axis=1)
     empate = t[t["_recall"] >= t["_recall"].max() - tol]
-    melhor = empate.sort_values("_prauc", ascending=False).iloc[0]
-    # Parcimónia: se a inicial está no empate e o desempate não a supera em mais de `tol` de PR-AUC
-    # normalizada, a diferença é ruído e mantém-se a inicial.
-    ini = empate[empate["inicial"].astype(bool)]
-    if len(ini) and melhor["_prauc"] - ini.iloc[0]["_prauc"] <= tol:
-        return ini.iloc[0]
-    return melhor
+    return empate.sort_values("_prauc", ascending=False).iloc[0]
 
 
 def serie_recall(linha, folds=None):
@@ -122,6 +119,63 @@ def veredicto(res_a, res_b):
     c = comparar(res_a, res_b, "recall")
     ok = bool(c["diferença média"] > 0 and c["folds em que A ganha"] >= 3 and c["pior fold A"] >= c["pior fold B"])
     return {**c, "melhoria real e estável (regra 8.9)": ok}
+
+def decidir(resultados, simplicidade):
+    """Regra completa da secção 8.9 entre vários candidatos.
+
+    `resultados`: {nome: tabela por fold com 'recall' e 'pr_auc_norm'} (de `avaliar_folds`).
+    `simplicidade`: lista de nomes do mais simples para o mais complexo (último desempate).
+    1. O candidato com maior recall médio ganha se for preferido (veredicto) a todos os outros.
+    2. Senão, ele e os candidatos a que não é preferido ficam empatados, e escolhe-se, por esta
+       ordem, o de menor desvio-padrão do recall, o de maior PR-AUC normalizada média e o mais simples.
+    Devolve (nome escolhido, tabela com as comparações).
+    """
+    nomes = sorted(resultados, key=lambda n: resultados[n]["recall"].mean(), reverse=True)
+    lider, outros = nomes[0], nomes[1:]
+    linhas = {f"{lider} contra {o}": veredicto(resultados[lider], resultados[o]) for o in outros}
+    tabela = pd.DataFrame(linhas).T
+    empatados = [lider] + [o for o in outros
+                           if not linhas[f"{lider} contra {o}"]["melhoria real e estável (regra 8.9)"]]
+    if len(empatados) == 1:
+        return lider, tabela
+    chave = lambda n: (resultados[n]["recall"].std(ddof=1),       # 1.º menor desvio
+                       -resultados[n]["pr_auc_norm"].mean(),       # 2.º maior PR-AUC normalizada
+                       simplicidade.index(n))                      # 3.º mais simples
+    return sorted(empatados, key=chave)[0], tabela
+
+def elegivel(res, recall_ref, prauc_ref):
+    """Condição de elegibilidade da secção 8.9, fold a fold.
+
+    `recall_ref`: recall com 200 alertas da regra da última sessão anómala, por fold.
+    `prauc_ref`: PR-AUC normalizada da taxa do posto a 7 dias, por fold.
+    """
+    t = pd.DataFrame({"recall": res["recall"], "recall ref.": pd.Series(recall_ref),
+                      "PR-AUC norm.": res["pr_auc_norm"], "PR-AUC norm. ref.": pd.Series(prauc_ref)})
+    t["supera as duas"] = (t["recall"] > t["recall ref."]) & (t["PR-AUC norm."] > t["PR-AUC norm. ref."])
+    return t
+
+# ── Scores de aquecimento (limiar móvel na primeira semana de cada fold) ─────
+def com_aquecimento(fazer_score, dias=7):
+    """Envolve um `fazer_score` para guardar também os scores dos `dias` antes de cada validação.
+
+    O limiar móvel (secção 8.8) calcula o limiar da primeira semana com os scores dos 7 dias
+    anteriores. Esses dias pertencem ao treino do fold e são previstos pelo modelo desse fold,
+    tal como no teste a última semana de setembro é prevista pelo modelo final. O modelo é ajustado
+    uma só vez, e os scores da validação ficam iguais aos que se obteriam sem o aquecimento.
+    Devolve (novo fazer_score, lista que recebe um DataFrame por fold, pela ordem dos folds).
+    """
+    guardados = []
+
+    def f(tr, va):
+        inicio = va["Start Time"].min().normalize()          # os folds começam à meia-noite do dia 1
+        aq = tr[tr["Start Time"] >= inicio - pd.Timedelta(days=dias)]
+        s = np.asarray(fazer_score(tr, pd.concat([aq, va])), dtype=float)
+        guardados.append(pd.DataFrame({"linha_df": aq.index.to_numpy(),
+                                       "Start Time": aq["Start Time"].to_numpy(),
+                                       "y": aq["is_Abnormal"].to_numpy().astype(int),
+                                       "score": s[:len(aq)]}))
+        return s[len(aq):]
+    return f, guardados
 
 
 # ── Métricas das probabilidades ──────────────────────────────────────────────
@@ -155,11 +209,18 @@ def previsoes_oof(df, scores):
     return pd.concat(partes, ignore_index=True)
 
 
-def guardar_para_B(pasta, df, escolhidos, scores_por_modelo, modelo_probabilistico, extra=None):
-    """Grava os hiperparâmetros escolhidos (JSON) e as previsões de validação de cada modelo (CSV comprimido)."""
+def guardar_para_B(pasta, df, escolhidos, scores_por_modelo, modelo_probabilistico, extra=None,
+                   aquecimento_por_modelo=None):
+    """Grava os hiperparâmetros escolhidos (JSON), as previsões de validação de cada modelo e, se
+    dados, os scores de aquecimento (7 dias antes de cada validação, previstos pelo modelo do fold)."""
     pasta = Path(pasta); pasta.mkdir(parents=True, exist_ok=True)
     for nome, sc in scores_por_modelo.items():
         previsoes_oof(df, sc).to_csv(pasta / f"task4_oof_validacao_{nome}.csv.gz", index=False)
+    for nome, partes in (aquecimento_por_modelo or {}).items():
+        assert len(partes) == len(FOLDS_NOMES), "tem de haver um bloco de aquecimento por fold"
+        pd.concat([p.assign(fold=f) for f, p in zip(FOLDS_NOMES, partes)], ignore_index=True) \
+            [["fold", "linha_df", "Start Time", "y", "score"]] \
+            .to_csv(pasta / f"task4_aquecimento_{nome}.csv.gz", index=False)
     conteudo = {
         "modelo_probabilistico_mais_forte": modelo_probabilistico,
         "hiperparametros_escolhidos": escolhidos,
