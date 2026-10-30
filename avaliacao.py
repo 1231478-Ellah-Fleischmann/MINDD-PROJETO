@@ -1,6 +1,6 @@
 """Avaliação dos modelos — Task 2
 
-Funções partilhadas pela Parte 1 (métricas) e pela Parte 2 (folds e baselines).
+Funções de métricas, folds temporais, baselines e limiar de decisão, usadas da Task 2 à Task 5.
 Convenção: `score` = quanto maior, maior o risco de sessão anómala (classe 1).
 """
 import numpy as np
@@ -87,7 +87,7 @@ def avaliar_por_mes(datas, y, score, limiar):
     return pd.DataFrame(linhas).T
 
 
-# ── Validação temporal (Parte 2) ─────────────────────────────────────────────
+# ── Validação temporal ─────────────────────────────────────────────
 # Expanding window: o treino começa sempre no início dos dados e cresce;
 # a validação são os 3 meses seguintes. O teste (out–dez/2021) nunca entra aqui.
 FOLDS = [

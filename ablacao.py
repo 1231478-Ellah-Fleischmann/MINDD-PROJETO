@@ -143,7 +143,7 @@ def criar_preprocessador(cols, espaco="posto", escalar=True, hora_onehot=True):
     return ColumnTransformer(blocos, remainder="drop", verbose_feature_names_out=False)
 
 
-# ── Modelos (hiperparâmetros FIXOS a priori; afinados só depois, na Parte B) ──
+# ── Modelos (hiperparâmetros FIXOS a priori; afinados só depois, na Task 4) ──
 HIPERPARAMETROS = {
     "logistica": {"C": 0.1, "max_iter": 300},
     "arvore": {"max_depth": 8, "min_samples_leaf": 200},
