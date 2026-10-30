@@ -2,7 +2,7 @@
   "modelo": "random_forest",
   "alertas_por_1000": 200,
   "procedimento_principal": "limiar móvel: quantil 80% dos scores dos 7 dias anteriores, recalculado à segunda-feira",
-  "limiar_fixo_complementar": 0.33275369776143826,
+  "limiar_fixo_complementar": 0.3327536977614383,
   "origem_do_limiar_fixo": "quantil de 80% dos scores da Random Forest na validação F4 (jul–set 2021)",
   "fixado_antes_do_teste": true
 }

@@ -1,0 +1,37 @@
+ficheiro,MB,gerado por
+pesquisa_boosting_amostra1.csv,0.024872,Task 4 (pesquisa)
+pesquisa_logistica_amostra1.csv,0.005952,Task 4 (pesquisa)
+pesquisa_random_forest_amostra1.csv,0.008377,Task 4 (pesquisa)
+task4_aquecimento_boosting.csv.gz,0.288521,Task 4
+task4_aquecimento_logistica.csv.gz,0.28982,Task 4
+task4_aquecimento_random_forest.csv.gz,0.290395,Task 4
+task4_calibracao.png,0.108456,Task 4
+task4_importancia_grupos.png,0.062695,Task 4
+task4_limiar.json,0.000378,Task 4
+task4_modelos_escolhidos.json,0.001442,Task 4
+task4_oof_validacao_boosting.csv.gz,3.849022,Task 4
+task4_oof_validacao_logistica.csv.gz,3.867518,Task 4
+task4_oof_validacao_random_forest.csv.gz,3.878229,Task 4
+task4_teste_previsoes.csv.gz,1.112607,Task 4
+task5_carga_semanal.csv,0.001375,Task 5
+task5_criterios_selecao.csv,0.00123,Task 5
+task5_decis_de_risco.csv,0.001192,Task 5
+task5_desempenho_por_dia.csv,0.002009,Task 5
+task5_desempenho_por_distrito.csv,0.000978,Task 5
+task5_desempenho_por_hora.csv,0.001245,Task 5
+task5_desempenho_por_localizacao.csv,0.003418,Task 5
+task5_desempenho_por_posto.csv,0.021731,Task 5
+task5_dois_niveis_prioridade.csv,0.000591,Task 5
+task5_estado_posto_falhas_24h.csv,0.001255,Task 5
+task5_estado_posto_ultima_sessao.csv,0.000772,Task 5
+task5_falhas_por_causa.csv,0.001933,Task 5
+task5_ficha_hiperparametros.csv,0.000997,Task 5
+task5_ficha_preprocessamento.csv,0.001074,Task 5
+task5_ficha_variaveis.csv,0.001394,Task 5
+task5_historico_utilizador.csv,0.001102,Task 5
+task5_metricas_teste.csv,0.002481,Task 5
+task5_perfil_acertos_erros.csv,0.000924,Task 5
+task5_pontos_funcionamento.csv,0.000998,Task 5
+task5_tabela_concisa_teste.csv,0.00086,Task 5
+task5_tabela_concisa_validacao.csv,0.001031,Task 5
+task5_validacao_candidatos_baselines.csv,0.00134,Task 5
