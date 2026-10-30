@@ -1,0 +1,6 @@
+bloco,passos,n.º,variáveis
+imp_log,imputação pela mediana do treino → log1p,4,"post_hours_since_previous_completed_session, post_hours_since_previous_completed_abnormal, user_days_since_previous_completed_session, user_days_since_previous_completed_abnormal"
+log,log1p,8,"Precipitation(mm), post_previous_abnormal_1D, post_previous_abnormal_7D, post_previous_abnormal_30D, user_previous_sessions_30D, user_previous_abnormal_30D, user_previous_sessions_180D, user_previous_abnormal_180D"
+cap,limite no percentil 99 do treino,1,user_active_sessions_at_start
+resto,sem transformação,13,"hour, dow, Temperature(℃), Relative Humidity(%), electricity_price, post_previous_sessions_1D, post_previous_abnormal_rate_1D, post_previous_sessions_7D, post_previous_abnormal_rate_7D, post_previous_sessions_30D, post_previous_abnormal_rate_30D, user_previous_abnormal_rate_30D, user_previous_abnormal_rate_180D"
+bin,sem transformação,4,"post_last_completed_abnormal, user_no_previous_completed_session, user_no_previous_completed_abnormal, user_last_completed_abnormal"

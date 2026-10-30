@@ -1,0 +1,20 @@
+,valor,origem
+bootstrap,True,valor por omissão do scikit-learn
+ccp_alpha,0.0,valor por omissão do scikit-learn
+class_weight,None,valor por omissão do scikit-learn
+criterion,gini,valor por omissão do scikit-learn
+max_depth,None,valor por omissão do scikit-learn
+max_features,0.5,"escolhido (Task 3, mantido na Task 4)"
+max_leaf_nodes,None,valor por omissão do scikit-learn
+max_samples,None,valor por omissão do scikit-learn
+min_impurity_decrease,0.0,valor por omissão do scikit-learn
+min_samples_leaf,50,"escolhido (Task 3, mantido na Task 4)"
+min_samples_split,2,valor por omissão do scikit-learn
+min_weight_fraction_leaf,0.0,valor por omissão do scikit-learn
+monotonic_cst,None,valor por omissão do scikit-learn
+n_estimators,200,fixado em ablacao.py
+n_jobs,-1,fixado em ablacao.py
+oob_score,False,valor por omissão do scikit-learn
+random_state,0,fixado em ablacao.py
+verbose,0,valor por omissão do scikit-learn
+warm_start,False,valor por omissão do scikit-learn
