@@ -1,4 +1,4 @@
-"""Preparação dos dados — Task 2, Parte 2
+"""Preparação dos dados — Task 2
 
 Passa a preparação da Task 1 para uma Pipeline do scikit-learn, para que
 TUDO o que aprende valores dos dados (mediana da imputação, cap no p99,
