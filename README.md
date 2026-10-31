@@ -50,7 +50,7 @@ Correr cada caderno de cima a baixo, num kernel limpo, por esta ordem:
 | 2 | `task2.ipynb` | — | 1 min |
 | 3 | `task3.ipynb` | — | 38 min |
 | 4 | `task4.ipynb` | `Resultados/pesquisa_*`, `Resultados/task4_*` | 24 min (64 min de raiz) |
-| 5 | `task5.ipynb` | `Resultados/task5_*` | 2 min |
+| 5 | `task5.ipynb` | `Resultados/task5_*` | 1 min |
 
 A Task 5 usa os ficheiros gerados pela Task 4 e não treina nenhum modelo.
 
